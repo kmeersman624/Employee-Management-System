@@ -8,7 +8,7 @@ USE employee_trackerDB;
 -- name - VARCHAR(30) to hold department name
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(30) NULL,
+  name VARCHAR(30) NOT NULL,
   PRIMARY KEY (id)
 );
 -- role:

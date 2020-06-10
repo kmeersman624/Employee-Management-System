@@ -3,7 +3,7 @@ const mysql = require("mysql");
 // Use InquirerJs NPM package to interact with the user via the command-line.
 const inquirer = require("inquirer");
 // Use console.table to print MySQL rows to the console. There is a built-in version of console.table, but the NPM package formats the data a little better for our purposes.
-const cTable = require("console.table");
+const consoletable = require("console.table");
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -34,7 +34,7 @@ function runTracker() {
         choices: [
           "Add a department",
           "Add a role",
-          "add an employee",
+          "Add an employee",
           "View a department",
           "View a role",
           "View an employee",
@@ -95,7 +95,8 @@ function addDepartment() {
       const query = "SELECT * FROM department";
       connection.query(query, function (err, res) {
         if (err) throw err;
-        cTable("All Departments:", res);
+        console.log('All Departments:');
+        console.table(res);
         runTracker();
       });
     });
@@ -108,15 +109,30 @@ function addRole() {
         type: "input",
         message: "What role would you like to add?",
       },
+      {
+        name: "salary",
+        type: "input",
+        message: "What is the salary for this role?"
+      },
+      {
+        name: "departmentChoice",
+        tyoe: "input",
+        message: "What department does this role fall under?"
+      }
     ])
+    //genrate role and department id??
+
     .then(function (answer) {
       connection.query("INSERT INTO role SET ?", {
-        name: answer.newRole,
+        title: answer.newRole,
+        salary: answer.salary,
+        department_id: answer.departmentChoice,
       });
       const query = "SELECT * FROM role";
       connection.query(query, function (err, res) {
         if (err) throw err;
-        cTable("All Roles:", res);
+        console.log("All Roles:");
+        console.table(res);
         runTracker();
       });
     });
@@ -149,8 +165,39 @@ function addEmployee() {
       const query = "SELECT * FROM employee";
       connection.query(query, function (err, res) {
         if (err) throw err;
-        cTable("All Employees:", res);
+        console.log("All Employees:");
+        console.table(res);
         runTracker();
       });
     });
+}
+function viewDepartment() {
+  const query = "SELECT * FROM department";
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    console.log("All Departments:")
+    console.table(res);
+    runTracker();
+  })
+}
+function viewRole() {
+  const query = "SELECT * FROM role";
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    console.log("All roles:");
+    console.table(res);
+    runTracker();
+  })
+}
+function viewEmployee() {
+  const query = "SELECT * FROM employee";
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    cpnsole.log("All employees:");
+    console.table(res);
+    runTracker();
+  })
+}
+function update() {
+
 }
