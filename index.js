@@ -38,6 +38,7 @@ function runTracker() {
           "View departments",
           "View roles",
           "View employees",
+          "Update employee role",
           "Exit",
         ],
       },
@@ -66,6 +67,10 @@ function runTracker() {
 
         case "View employees":
           viewEmployee();
+          break;
+
+        case "Update employee role":
+          update();
           break;
 
         case "Exit":
@@ -99,63 +104,61 @@ function addDepartment() {
 function addRole() {
   connection.query("SELECT * FROM role", function (err, roles) {
     connection.query("SELECT * FROM department", function (err, departments) {
-    if (err) throw err;
-    inquirer
-      .prompt([
-        {
-          name: "newRole",
-          type: "input",
-          // choices: function () {
-          //   var roleArray = [];
-          //   for (var i = 0; i < roles.length; i++) {
-          //     roleArray.push(roles[i].title);
-          //   }
-          //   return roleArray;
-          // },
-          message: "What role would you like to add?",
-        },
-        {
-          name: "salary",
-          type: "input",
-          message: "What is the salary for this role?",
-        },
-        {
-          name: "choice",
-          type: "rawlist",
-          choices: function () {
-          var deptArray = [];
-          for (var i = 0; i < departments.length; i++) {
-            deptArray.push(departments[i].name);
-          }
-          return deptArray;
-        },
-        message: "What department does this role fall under?",
-      },
-
-      ])
-      .then(function (result) {
-        // let deptID;
-        for (let i = 0; i < departments.length; i++) {
-          if (departments[i].name == result.choice) {
-            result.department_id = departments[i].id;
-          }
-        }
-        var query = "INSERT INTO role SET ?"
-        const values = 
+      if (err) throw err;
+      inquirer
+        .prompt([
           {
+            name: "newRole",
+            type: "input",
+            // choices: function () {
+            //   var roleArray = [];
+            //   for (var i = 0; i < roles.length; i++) {
+            //     roleArray.push(roles[i].title);
+            //   }
+            //   return roleArray;
+            // },
+            message: "What role would you like to add?",
+          },
+          {
+            name: "salary",
+            type: "input",
+            message: "What is the salary for this role?",
+          },
+          {
+            name: "choice",
+            type: "rawlist",
+            choices: function () {
+              var deptArray = [];
+              for (var i = 0; i < departments.length; i++) {
+                deptArray.push(departments[i].name);
+              }
+              return deptArray;
+            },
+            message: "What department does this role fall under?",
+          },
+        ])
+        .then(function (result) {
+          // let deptID;
+          for (let i = 0; i < departments.length; i++) {
+            if (departments[i].name == result.choice) {
+              result.department_id = departments[i].id;
+            }
+          }
+          var query = "INSERT INTO role SET ?";
+          const values = {
             title: result.newRole,
             salary: result.salary,
-            department_id: result.department_id
-          }
+            department_id: result.department_id,
+          };
           // const query = "SELECT * FROM role";
           connection.query(query, values, function (err) {
             if (err) throw err;
             console.table("Role was successfully added");
             runTracker();
           });
-      });
+        });
+    });
   });
-});
 }
 function addEmployee() {
   connection.query("SELECT * FROM role", function (err, res) {
@@ -231,5 +234,67 @@ function viewEmployee() {
     console.log("All employees:");
     console.table(res);
     runTracker();
+  });
+}
+function update() {
+  const roleQuery = "SELECT * FROM role;";
+  const deptQuery = "SELECT * FROM department";
+  connection.query(roleQuery, function (err, roles) {
+    connection.query(deptQuery, function (err, departments) {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "updateRole",
+            type: "rawlist",
+            choices: function () {
+              var rolesArray = [];
+              for (var i = 0; i < roles.length; i++) {
+                rolesArray.push(roles[i].title);
+              }
+              return rolesArray;
+            },
+            message: "What role would you like to update?",
+          },
+          {
+            name: "newSalary",
+            tyoe: "input",
+            message: "What is the salary for the updated role?",
+          },
+          {
+            name: "newDept",
+            type: "rawlist",
+            choices: function () {
+              var deptArray = [];
+              for (var i = 0; i < departments.length; i++) {
+                deptArray.push(departments[i].name);
+              }
+              return deptArray;
+            },
+            message: "What department does this updated role fall under?",
+          },
+        ])
+        .then(function (result) {
+          for (let i = 0; i < departments.length; i++) {
+            if (departments[i].name == result.choice) {
+              result.department_id = departments[i].id;
+            }
+          }
+          let query =
+            "UPDATE role SET title = ?, salary = ? WHERE department_id = ?";
+          const values = [
+            { title: result.updateRole },
+            { salary: result.newSalary },
+            { department_id: result.department_id },
+          ];
+          connection.query(query, values, function (
+            err
+          ) {
+            if (err) throw err;
+            console.log("The role was successfully updated");
+            runTracker();
+          });
+        });
+    });
   });
 }

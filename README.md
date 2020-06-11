@@ -36,11 +36,9 @@
   ## Contributing
   Kate Meersman
 
-  ## Tests
+  ## Test
 
-  ![image of test](./assets/.PNG)
+  ![gif of test](./assets/employeesystemvideo.gif)
 
-  ![image of test](./assets/.PNG)
-
-  ## Questions
+   ## Questions
   * katie4682@yahoo.com
