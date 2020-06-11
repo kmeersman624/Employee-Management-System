@@ -5,7 +5,7 @@ const inquirer = require("inquirer");
 // Use console.table to print MySQL rows to the console. There is a built-in version of console.table, but the NPM package formats the data a little better for our purposes.
 const consoletable = require("console.table");
 
-var connection = mysql.createConnection({
+const connection = mysql.createConnection({
   host: "localhost",
   // Your port; if not 3306
   port: 3306,
@@ -35,10 +35,9 @@ function runTracker() {
           "Add a department",
           "Add a role",
           "Add an employee",
-          "View a department",
-          "View a role",
-          "View an employee",
-          "Update employee role",
+          "View departments",
+          "View roles",
+          "View employees",
           "Exit",
         ],
       },
@@ -57,20 +56,16 @@ function runTracker() {
           addEmployee();
           break;
 
-        case "View a department":
+        case "View departments":
           viewDepartment();
           break;
 
-        case "View a role":
+        case "View roles":
           viewRole();
           break;
 
-        case "View an employee":
+        case "View employees":
           viewEmployee();
-          break;
-
-        case "Update employee role":
-          update();
           break;
 
         case "Exit":
@@ -95,90 +90,130 @@ function addDepartment() {
       const query = "SELECT * FROM department";
       connection.query(query, function (err, res) {
         if (err) throw err;
-        console.log('All Departments:');
+        console.log("All Departments:");
         console.table(res);
         runTracker();
       });
     });
 }
 function addRole() {
-  inquirer
-    .prompt([
-      {
-        name: "newRole",
-        type: "input",
-        message: "What role would you like to add?",
+  connection.query("SELECT * FROM role", function (err, roles) {
+    connection.query("SELECT * FROM departemnt", function (err, departments) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "newRole",
+          type: "rawlist",
+          choices: function () {
+            var roleArray = [];
+            for (var i = 0; i < roles.length; i++) {
+              roleArray.push(roles[i].title);
+            }
+            return roleArray;
+          },
+          message: "What role would you like to add?",
+        },
+        {
+          name: "salary",
+          type: "input",
+          message: "What is the salary for this role?",
+        },
+        {
+          name: "choice",
+          tyoe: "rawlist",
+          choices: function () {
+          var deptArray = [];
+          for (var i = 0; i < departments.length; i++) {
+            deptArray.push(departments[i].name);
+          }
+          return deptArray;
+        },
+        message: "What department does this role fall under?",
       },
-      {
-        name: "salary",
-        type: "input",
-        message: "What is the salary for this role?"
-      },
-      {
-        name: "departmentChoice",
-        tyoe: "input",
-        message: "What department does this role fall under?"
-      }
-    ])
-    //genrate role and department id??
 
-    .then(function (answer) {
-      connection.query("INSERT INTO role SET ?", {
-        title: answer.newRole,
-        salary: answer.salary,
-        department_id: answer.departmentChoice,
+      ])
+      .then(function (result) {
+        // let deptID;
+        for (let i = 0; i < departments.length; i++) {
+          if (departments[i].name == result.choice) {
+            result.department_id = departments[i].name;
+          }
+        }
+        var query = "INSERT INTO role SET ?"
+        const values = 
+          {
+            title: result.newRole,
+            salary: result.salary,
+            department_id: result.department_id
+          }
+          // const query = "SELECT * FROM role";
+          connection.query(query, values, function (err) {
+            if (err) throw err;
+            console.table("Role was successfully added");
+            runTracker();
+          });
       });
-      const query = "SELECT * FROM role";
-      connection.query(query, function (err, res) {
-        if (err) throw err;
-        console.log("All Roles:");
-        console.table(res);
-        runTracker();
-      });
-    });
+  });
+});
 }
 function addEmployee() {
-  inquirer
-    .prompt([
-      {
-        name: "firstName",
-        type: "input",
-        message: "What is the employee's first name?",
-      },
-      {
-        name: "lastName",
-        type: "input",
-        message: "What is the employee's last name?",
-      },
-      {
-        name: "role",
-        type: "input",
-        message: "What is the employee's role?",
-      },
-    ])
-    .then(function (answer) {
-      connection.query("INSERT INTO employee SET ?", {
-        firstName: answer.firstName,
-        lastName: answer.lastName,
-        role: answer.role,
+  connection.query("SELECT * FROM role", function (err, res) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "firstName",
+          type: "input",
+          message: "What is the employee's first name?",
+        },
+        {
+          name: "lastName",
+          type: "input",
+          message: "What is the employee's last name?",
+        },
+        {
+          name: "choice",
+          type: "rawlist",
+          choices: function () {
+            var rolesArray = [];
+            for (var i = 0; i < res.length; i++) {
+              rolesArray.push(res[i].title);
+            }
+            return rolesArray;
+          },
+          message: "What is the employee's role?",
+        },
+      ])
+      .then(function (res) {
+        for (var i = 0; i < res.length; i++) {
+          if (res[i].title === res.choice) {
+            res.role_id = res[i].id;
+          }
+        }
+        var query = "INSERT INTO employee SET ?";
+        const values = {
+          first_Name: res.firstName,
+          last_Name: res.lastName,
+          role_id: res.role_id,
+        };
+        // const query = "SELECT * FROM employee";
+        connection.query(query, values, function (err, res) {
+          if (err) throw err;
+          console.log("Employee was sucessfully added");
+          runTracker();
+        });
       });
-      const query = "SELECT * FROM employee";
-      connection.query(query, function (err, res) {
-        if (err) throw err;
-        console.log("All Employees:");
-        console.table(res);
-        runTracker();
-      });
-    });
+  });
 }
 function viewDepartment() {
   const query = "SELECT * FROM department";
   connection.query(query, function (err, res) {
     if (err) throw err;
-    console.log("All Departments:")
+    console.log("All Departments:");
     console.table(res);
     runTracker();
-  })
+  });
 }
 function viewRole() {
   const query = "SELECT * FROM role";
@@ -187,17 +222,14 @@ function viewRole() {
     console.log("All roles:");
     console.table(res);
     runTracker();
-  })
+  });
 }
 function viewEmployee() {
   const query = "SELECT * FROM employee";
   connection.query(query, function (err, res) {
     if (err) throw err;
-    cpnsole.log("All employees:");
+    console.log("All employees:");
     console.table(res);
     runTracker();
-  })
-}
-function update() {
-
+  });
 }
