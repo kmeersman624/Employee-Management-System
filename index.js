@@ -52,7 +52,7 @@ function runTracker() {
           addRole();
           break;
 
-        case "Add an Employee":
+        case "Add an employee":
           addEmployee();
           break;
 
@@ -98,20 +98,20 @@ function addDepartment() {
 }
 function addRole() {
   connection.query("SELECT * FROM role", function (err, roles) {
-    connection.query("SELECT * FROM departemnt", function (err, departments) {
+    connection.query("SELECT * FROM department", function (err, departments) {
     if (err) throw err;
     inquirer
       .prompt([
         {
           name: "newRole",
-          type: "rawlist",
-          choices: function () {
-            var roleArray = [];
-            for (var i = 0; i < roles.length; i++) {
-              roleArray.push(roles[i].title);
-            }
-            return roleArray;
-          },
+          type: "input",
+          // choices: function () {
+          //   var roleArray = [];
+          //   for (var i = 0; i < roles.length; i++) {
+          //     roleArray.push(roles[i].title);
+          //   }
+          //   return roleArray;
+          // },
           message: "What role would you like to add?",
         },
         {
@@ -121,7 +121,7 @@ function addRole() {
         },
         {
           name: "choice",
-          tyoe: "rawlist",
+          type: "rawlist",
           choices: function () {
           var deptArray = [];
           for (var i = 0; i < departments.length; i++) {
@@ -137,7 +137,7 @@ function addRole() {
         // let deptID;
         for (let i = 0; i < departments.length; i++) {
           if (departments[i].name == result.choice) {
-            result.department_id = departments[i].name;
+            result.department_id = departments[i].id;
           }
         }
         var query = "INSERT INTO role SET ?"
@@ -185,17 +185,17 @@ function addEmployee() {
           message: "What is the employee's role?",
         },
       ])
-      .then(function (res) {
+      .then(function (newEmployee) {
         for (var i = 0; i < res.length; i++) {
-          if (res[i].title === res.choice) {
-            res.role_id = res[i].id;
+          if (res[i].title === newEmployee.choice) {
+            newEmployee.role_id = res[i].id;
           }
         }
         var query = "INSERT INTO employee SET ?";
         const values = {
-          first_Name: res.firstName,
-          last_Name: res.lastName,
-          role_id: res.role_id,
+          first_Name: newEmployee.firstName,
+          last_Name: newEmployee.lastName,
+          role_id: newEmployee.role_id,
         };
         // const query = "SELECT * FROM employee";
         connection.query(query, values, function (err, res) {
